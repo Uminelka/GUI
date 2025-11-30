@@ -9,46 +9,63 @@ class Calculator:
         self.root.title("Простой Калькулятор")
         self.root.geometry("300x400")
 
-   
-        vcmd = (root.register(self.validate_input), "%S")
+        vcmd = (root.register(self.validate_input), "%S", "%P")
 
         self.entry = tk.Entry(
             root,
             font=("Arial", 20),
             justify="right",
             validate="key",
-            validatecommand=vcmd
+            validatecommand=vcmd,
         )
         self.entry.grid(row=0, column=0, columnspan=4, padx=10, pady=10, sticky="we")
 
-         buttons = [
-            ('7', 1, 0), ('8', 1, 1), ('9', 1, 2), ('/', 1, 3),
-            ('4', 2, 0), ('5', 2, 1), ('6', 2, 2), ('*', 2, 3),
-            ('1', 3, 0), ('2', 3, 1), ('3', 3, 2), ('-', 3, 3),
-            ('0', 4, 0), ('.', 4, 1), ('+', 4, 2)
+        buttons = [
+            ("7", 1, 0),
+            ("8", 1, 1),
+            ("9", 1, 2),
+            ("/", 1, 3),
+            ("4", 2, 0),
+            ("5", 2, 1),
+            ("6", 2, 2),
+            ("*", 2, 3),
+            ("1", 3, 0),
+            ("2", 3, 1),
+            ("3", 3, 2),
+            ("-", 3, 3),
+            ("0", 4, 0),
+            (".", 4, 1),
+            ("+", 4, 2),
         ]
 
-        for (text, row, col) in buttons:
-            tk.Button(root, text=text, font=("Arial", 15),
-                      command=lambda t=text: self.click(t)).grid(
-                row=row, column=col, sticky="nsew", padx=2, pady=2
-            )
+        for text, row, col in buttons:
+            tk.Button(
+                root,
+                text=text,
+                font=("Arial", 15),
+                command=lambda t=text: self.click(t),
+            ).grid(row=row, column=col, sticky="nsew", padx=2, pady=2)
 
-        tk.Button(root, text="=", font=("Arial", 15), bg="lightblue",
-                  command=self.calculate).grid(row=4, column=3, sticky="nsew", padx=2, pady=2)
-        tk.Button(root, text="C", font=("Arial", 15), bg="red", fg="white",
-                  command=self.clear).grid(row=5, column=0, columnspan=2, sticky="nsew", padx=2, pady=2)
-        tk.Button(root, text="√", font=("Arial", 15),
-                  command=self.sqrt).grid(row=5, column=2, columnspan=2, sticky="nsew", padx=2, pady=2)
+        tk.Button(
+            root, text="=", font=("Arial", 15), bg="lightblue", command=self.calculate
+        ).grid(row=4, column=3, sticky="nsew", padx=2, pady=2)
+        tk.Button(
+            root, text="C", font=("Arial", 15), bg="red", fg="white", command=self.clear
+        ).grid(row=5, column=0, columnspan=2, sticky="nsew", padx=2, pady=2)
+        tk.Button(root, text="√", font=("Arial", 15), command=self.sqrt).grid(
+            row=5, column=2, columnspan=2, sticky="nsew", padx=2, pady=2
+        )
 
-         for i in range(4):
+        for i in range(4):
             root.grid_columnconfigure(i, weight=1)
         for i in range(6):
             root.grid_rowconfigure(i, weight=1)
 
-     def validate_input(self, char):
+    def validate_input(self, char, new_value):
         allowed = "0123456789.+-*/"
-        return char in allowed
+        if new_value == "":
+            return True
+        return all(c in allowed for c in new_value)
 
     def click(self, value):
         self.entry.insert(tk.END, value)

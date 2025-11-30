@@ -120,8 +120,3 @@ pip install matplotlib numpy
 
 MIT License
 
-```
-
----
-
-```

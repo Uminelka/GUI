@@ -2,7 +2,7 @@
 
 ## Как скопировать репозиторий. 
 ```bash
-git clone 
+git clone https://github.com/Uminelka/GUI.git
 ```
 
 ## 1. Простой Калькулятор

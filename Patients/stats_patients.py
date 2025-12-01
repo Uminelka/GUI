@@ -1,9 +1,11 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 from dataclasses import dataclass
+from typing import Optional
 import json
 import os
 import matplotlib.pyplot as plt
+import numpy as np
 
 
 @dataclass
@@ -18,28 +20,26 @@ class Patient:
 
 DB_FILE = "patients.json"
 
- 
+
 class PatientForm(tk.Toplevel):
-    def __init__(self, master, on_save, patient: Patient = None):
+    def __init__(self, master, on_save, patient: Optional[Patient] = None):
         super().__init__(master)
         self.title("Пациент")
         self.geometry("300x350")
         self.on_save = on_save
 
-         
         self.e_fio = self._make_input("ФИО")
         self.e_age = self._make_input("Возраст")
         self.c_sex = self._make_combo("Пол", ["М", "Ж"])
         self.e_height = self._make_input("Рост (см)")
         self.e_weight = self._make_input("Вес (кг)")
 
-       
         if patient:
             self.e_fio.insert(0, patient.fio)
-            self.e_age.insert(0, patient.age)
+            self.e_age.insert(0, str(patient.age))
             self.c_sex.set(patient.sex)
-            self.e_height.insert(0, patient.height)
-            self.e_weight.insert(0, patient.weight)
+            self.e_height.insert(0, str(patient.height)) 
+            self.e_weight.insert(0, str(patient.weight)) 
 
         tk.Button(self, text="Сохранить", bg="lightgreen", command=self.save).pack(pady=10)
 
@@ -83,7 +83,6 @@ class PatientForm(tk.Toplevel):
             messagebox.showerror("Ошибка", str(e))
 
 
- 
 class PatientApp:
     def __init__(self, root):
         self.root = root
@@ -93,7 +92,6 @@ class PatientApp:
         self.patients: list[Patient] = []
         self.load()
 
-        
         self.sheet = ttk.Treeview(root, columns=("fio", "age", "sex", "h", "w", "bmi"),
                                   show="headings")
         for col in self.sheet["columns"]:
@@ -101,7 +99,6 @@ class PatientApp:
             self.sheet.column(col, width=140)
         self.sheet.pack(fill="both", expand=True)
 
-      
         panel = tk.Frame(root)
         panel.pack(fill="x", pady=10)
 
@@ -124,25 +121,23 @@ class PatientApp:
         with open(DB_FILE, "w", encoding="utf-8") as f:
             json.dump([p.__dict__ for p in self.patients], f, ensure_ascii=False, indent=4)
 
-     
     def refresh(self):
         for row in self.sheet.get_children():
             self.sheet.delete(row)
 
         for p in self.patients:
             self.sheet.insert("", "end",
-                              values=(p.fio, p.age, p.sex, p.height, p.weight, p.bmi))
+                              values=(str(p.fio), str(p.age), str(p.sex), 
+                                      str(p.height), str(p.weight), str(p.bmi)))
 
-    
     def add(self):
         def callback(new_patient):
             self.patients.append(new_patient)
             self.save()
             self.refresh()
 
-        PatientForm(self.root, callback)
+        PatientForm(self.root, callback, None) 
 
-     
     def edit(self):
         selected = self.sheet.selection()
         if not selected:
@@ -158,7 +153,6 @@ class PatientApp:
 
         PatientForm(self.root, callback, old_patient)
 
-     
     def stats(self):
         if not self.patients:
             messagebox.showinfo("Нет данных", "Пациентов нет")
@@ -168,45 +162,53 @@ class PatientApp:
         sexes = [p.sex for p in self.patients]
         bmis = [p.bmi for p in self.patients]
 
+        ages_array = np.array(ages)
+        sexes_array = np.array(sexes)
+        bmis_array = np.array(bmis)
+
         plt.figure(figsize=(12, 8))
 
-         
+        # График 1: Распределение пациентов по полу
         plt.subplot(2, 2, 1)
         plt.title("Распределение пациентов по полу")
         plt.xlabel("Пол")
         plt.ylabel("Количество")
-        plt.hist(sexes, bins=2, rwidth=0.7)
+        
+        male_count = np.sum(sexes_array == "М")
+        female_count = np.sum(sexes_array == "Ж")
+        
+        plt.bar(["Мужчины", "Женщины"], [male_count, female_count], color=["blue", "pink"])
+        plt.grid(True, axis='y')
 
-         
+        # График 2: Распределение возраста пациентов
         plt.subplot(2, 2, 2)
         plt.title("Распределение возраста пациентов")
         plt.xlabel("Возраст")
         plt.ylabel("Количество")
-        plt.hist(ages, bins=10, color="orange")
+        plt.hist(ages_array, bins=10, color="orange", edgecolor="black")
+        plt.grid(True)
 
-         
+        # График 3: Распределение ИМТ пациентов
         plt.subplot(2, 2, 3)
         plt.title("Распределение ИМТ пациентов")
         plt.xlabel("ИМТ")
         plt.ylabel("Количество")
-        plt.hist(bmis, bins=10, color="green")
+        plt.hist(bmis_array, bins=10, color="green", edgecolor="black")
+        plt.grid(True)
 
-         
+        # График 4: Зависимость ИМТ от возраста
         plt.subplot(2, 2, 4)
         plt.title("Зависимость ИМТ от возраста")
         plt.xlabel("Возраст")
         plt.ylabel("ИМТ")
-        plt.scatter(ages, bmis, color="red")
+        plt.scatter(ages_array, bmis_array, color="red")
         plt.grid(True)
 
         plt.tight_layout()
         plt.show()
 
 
-
-
 if __name__ == "__main__":
     root = tk.Tk()
     PatientApp(root)
     root.mainloop()
-
